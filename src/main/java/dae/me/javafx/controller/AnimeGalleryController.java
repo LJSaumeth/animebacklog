@@ -1,8 +1,11 @@
 package dae.me.javafx.controller;
 
 import dae.me.dto.AnimeResponseDto;
+import dae.me.dto.CategoryResponseDto;
 import dae.me.dto.PagedResponseDto;
+import dae.me.entity.Anime.AnimeStatus;
 import dae.me.service.AnimeService;
+import dae.me.service.CategoryService;
 import dae.me.javafx.component.StarRating;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -10,10 +13,16 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class AnimeGalleryController {
@@ -22,11 +31,14 @@ public class AnimeGalleryController {
     private FlowPane galleryPane;
 
     private final AnimeService animeService;
+    private final CategoryService categoryService;
     private final NavigationService navigationService;
 
     public AnimeGalleryController(AnimeService animeService,
+                                   CategoryService categoryService,
                                    NavigationService navigationService) {
         this.animeService = animeService;
+        this.categoryService = categoryService;
         this.navigationService = navigationService;
     }
 
@@ -36,18 +48,21 @@ public class AnimeGalleryController {
     }
 
     private void loadGallery() {
+        Map<Long, String> categoryNames = categoryService.findAll().stream()
+                .collect(Collectors.toMap(CategoryResponseDto::id, CategoryResponseDto::name));
+
         PagedResponseDto<AnimeResponseDto> result = animeService.findAll(
                 null, null, null, null, null, "name", "asc", 0, 500);
 
         galleryPane.getChildren().clear();
 
         for (AnimeResponseDto anime : result.content()) {
-            VBox card = createCard(anime);
+            VBox card = createCard(anime, categoryNames);
             galleryPane.getChildren().add(card);
         }
     }
 
-    private VBox createCard(AnimeResponseDto anime) {
+    private VBox createCard(AnimeResponseDto anime, Map<Long, String> categoryNames) {
         VBox card = new VBox(6);
         card.setAlignment(Pos.TOP_CENTER);
         card.setPrefWidth(160);
@@ -79,25 +94,48 @@ public class AnimeGalleryController {
         nameLabel.setMaxWidth(140);
         nameLabel.setAlignment(Pos.CENTER);
 
-        String ratingText = anime.rating() != null
-                ? String.format(" %.1f/5", anime.rating()) : " Sin rating";
-        Label ratingLabel = new Label(ratingText);
-        ratingLabel.setStyle("-fx-text-fill: #FF5FCF; -fx-font-size: 11px;");
-
         StarRating starDisplay = new StarRating();
         starDisplay.setValue(anime.rating() != null ? anime.rating() : 0.0);
         starDisplay.setEditable(false);
         starDisplay.setStyle("-fx-font-size: 11px;");
 
-        card.getChildren().addAll(imageView, nameLabel, starDisplay, ratingLabel);
+        HBox infoRow = buildInfoRow(anime.status(), anime.categoryIds(), categoryNames);
+
+        card.getChildren().addAll(imageView, nameLabel, starDisplay, infoRow);
 
         card.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                navigationService.navigateToAnimeForm(anime);
+                navigationService.navigateToAnimeDetail(anime);
             }
         });
 
         return card;
+    }
+
+    private HBox buildInfoRow(AnimeStatus status, List<Long> categoryIds,
+                               Map<Long, String> categoryNames) {
+        HBox row = new HBox(4);
+        row.setMaxWidth(140);
+
+        Label statusLabel = new Label(status != null ? status.name() : "");
+        statusLabel.setStyle("-fx-text-fill: #9929EA; -fx-font-size: 9px;");
+
+        List<String> names = categoryIds != null
+                ? categoryIds.stream()
+                    .map(id -> categoryNames.getOrDefault(id, ""))
+                    .filter(n -> !n.isEmpty())
+                    .toList()
+                : List.of();
+        String catsText = String.join(", ", names);
+        Label catLabel = new Label(catsText);
+        catLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 9px;");
+        catLabel.setWrapText(true);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        row.getChildren().addAll(statusLabel, spacer, catLabel);
+        return row;
     }
 
     private Image createPlaceholder() {

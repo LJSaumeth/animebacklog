@@ -1,6 +1,7 @@
 package dae.me.client;
 
 import dae.me.dto.jikan.JikanAnimeResponse;
+import dae.me.dto.jikan.JikanEpisodesResponse;
 import dae.me.dto.jikan.JikanSearchResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -40,5 +41,15 @@ public class JikanClient {
                 .uri("/anime/{malId}/full", malId)
                 .retrieve()
                 .body(JikanAnimeResponse.class);
+    }
+
+    public JikanEpisodesResponse getAnimeEpisodes(Long malId, int page) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/anime/{malId}/episodes")
+                        .queryParam("page", page)
+                        .build(malId))
+                .retrieve()
+                .body(JikanEpisodesResponse.class);
     }
 }

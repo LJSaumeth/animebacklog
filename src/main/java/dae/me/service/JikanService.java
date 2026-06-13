@@ -1,17 +1,21 @@
 package dae.me.service;
 
 import dae.me.client.JikanClient;
+import dae.me.dto.EpisodeDto;
 import dae.me.dto.jikan.JikanAnimeItemDto;
 import dae.me.dto.jikan.JikanAnimeResponse;
+import dae.me.dto.jikan.JikanEpisodesResponse;
 import dae.me.dto.jikan.JikanSearchResponse;
 import dae.me.exception.JikanApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JikanService {
@@ -72,6 +76,24 @@ public class JikanService {
                 throw new JikanApiException("Jikan API is unavailable", retryException);
             }
         }
+    }
+
+    @Cacheable(value = "jikan-episodes", key = "#malId")
+    public List<EpisodeDto> getAnimeEpisodes(Long malId) {
+        log.info("Fetching episodes from Jikan for malId={}", malId);
+        JikanEpisodesResponse response = executeWithRetry(() -> jikanClient.getAnimeEpisodes(malId, 1));
+        if (response == null || response.data() == null) {
+            log.warn("Jikan episodes response null or data null for malId={}", malId);
+            return Collections.emptyList();
+        }
+        log.info("Jikan returned {} episodes for malId={}", response.data().size(), malId);
+        List<JikanEpisodesResponse.JikanEpisodeData> data = response.data();
+        List<EpisodeDto> episodes = new java.util.ArrayList<>();
+        for (int i = 0; i < data.size(); i++) {
+            var ep = data.get(i);
+            episodes.add(new EpisodeDto(ep.malId(), ep.title(), i + 1));
+        }
+        return episodes;
     }
 
     @FunctionalInterface

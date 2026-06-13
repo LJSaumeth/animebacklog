@@ -93,6 +93,23 @@ public class MainController implements NavigationService {
     }
 
     @Override
+    public void navigateToAnimeDetail(AnimeResponseDto anime) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/anime-detail.fxml"));
+            loader.setControllerFactory(weaver);
+            Node view = loader.load();
+            AnimeDetailController controller = loader.getController();
+            controller.setAnime(anime);
+            currentView = view;
+            currentFxml = "/fxml/anime-detail.fxml";
+            contentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            contentArea.getChildren().setAll(
+                    new Label("Error loading view: " + e.getMessage()));
+        }
+    }
+
+    @Override
     public void refreshCurrentView() {
         if (currentFxml != null) {
             navigateTo(currentFxml);

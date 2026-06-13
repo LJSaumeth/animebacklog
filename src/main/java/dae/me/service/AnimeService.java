@@ -1,11 +1,15 @@
 package dae.me.service;
 
+import dae.me.dto.AnimeDetailResponseDto;
 import dae.me.dto.AnimeRequestDto;
 import dae.me.dto.AnimeResponseDto;
 import dae.me.dto.CategoryRequestDto;
+import dae.me.dto.CategoryResponseDto;
+import dae.me.dto.EpisodeDto;
 import dae.me.dto.ImportAnimeRequest;
 import dae.me.dto.PagedResponseDto;
 import dae.me.dto.jikan.JikanAnimeItemDto;
+import dae.me.exception.JikanApiException;
 import dae.me.entity.Anime;
 import dae.me.entity.Anime.AnimeStatus;
 import dae.me.entity.Category;
@@ -15,6 +19,7 @@ import dae.me.repository.CategoryRepository;
 import dae.me.specification.AnimeSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AnimeService {
@@ -104,6 +110,42 @@ public class AnimeService {
         Anime anime = animeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Anime not found with id " + id));
         return AnimeMapper.toDto(anime);
+    }
+
+    @Transactional(readOnly = true)
+    public AnimeDetailResponseDto getAnimeDetail(Long id) {
+        Anime anime = animeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Anime not found with id " + id));
+
+        AnimeResponseDto animeDto = AnimeMapper.toDto(anime);
+
+        List<String> categoryNames = anime.getCategories().stream()
+                .map(Category::getName)
+                .toList();
+
+        List<EpisodeDto> episodes = List.of();
+        log.info("getAnimeDetail: id={}, malId={}", id, anime.getMalId());
+        if (anime.getMalId() != null) {
+            try {
+                episodes = jikanService.getAnimeEpisodes(anime.getMalId());
+                log.info("getAnimeDetail: got {} episodes for anime id={}", episodes.size(), id);
+            } catch (JikanApiException e) {
+                log.warn("Jikan episodes unavailable for anime {} (malId={})", id, anime.getMalId());
+            }
+        }
+
+        return new AnimeDetailResponseDto(
+                animeDto.id(),
+                animeDto.name(),
+                animeDto.episodes(),
+                animeDto.seasons(),
+                animeDto.status(),
+                animeDto.imageUrl(),
+                animeDto.malId(),
+                animeDto.rating(),
+                animeDto.categoryIds(),
+                categoryNames,
+                episodes);
     }
 
     @Transactional
@@ -230,6 +272,8 @@ public class AnimeService {
 
         Anime anime = animeRepository.findById(animeId)
                 .orElseThrow(() -> new EntityNotFoundException("Anime not found with id " + animeId));
+
+        anime.setMalId(malId);
 
         for (String genreName : jikan.genres()) {
             Long catId = findOrCreateCategory(genreName);

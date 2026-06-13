@@ -1,5 +1,6 @@
 package dae.me.controller;
 
+import dae.me.dto.AnimeDetailResponseDto;
 import dae.me.dto.AnimeRequestDto;
 import dae.me.dto.AnimeResponseDto;
 import dae.me.dto.AssignCategoriesRequest;
@@ -71,6 +72,11 @@ public class AnimeController {
     @GetMapping("/{id}")
     public ResponseEntity<AnimeResponseDto> findById(@PathVariable Long id) {
         return ResponseEntity.ok(animeService.findById(id));
+    }
+
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<AnimeDetailResponseDto> getDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(animeService.getAnimeDetail(id));
     }
 
     @PutMapping("/{id}")

@@ -5,6 +5,10 @@ import dae.me.dto.AnimeResponseDto;
 import dae.me.dto.RatingRequest;
 import dae.me.entity.Anime.AnimeStatus;
 import dae.me.repository.AnimeRepository;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,16 +19,39 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class AnimeControllerTest {
+
+    private static final WireMockServer wireMock = new WireMockServer(
+            new WireMockConfiguration().dynamicPort());
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("jikan.api.base-url", () -> wireMock.baseUrl());
+    }
+
+    @BeforeAll
+    static void startWireMock() {
+        wireMock.start();
+    }
+
+    @AfterAll
+    static void stopWireMock() {
+        wireMock.stop();
+    }
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -35,6 +62,7 @@ class AnimeControllerTest {
     @BeforeEach
     void cleanUp() {
         animeRepository.deleteAll();
+        wireMock.resetAll();
     }
 
     @Nested
@@ -451,6 +479,90 @@ class AnimeControllerTest {
             assertThat(content.get(0).get("rating")).isEqualTo(5.0);
             assertThat(content.get(1).get("rating")).isEqualTo(3.0);
             assertThat(content.get(2).get("rating")).isEqualTo(1.5);
+        }
+    }
+
+    @Nested
+    class GetAnimeDetail {
+
+        @Test
+        void shouldGetDetail_WithMalId_ReturnsEpisodes() {
+            wireMock.stubFor(get(urlPathEqualTo("/anime/1/episodes"))
+                    .willReturn(aResponse()
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("""
+                                    {
+                                      "data": [
+                                        { "mal_id": 1, "title": "Asteroid Blues", "score": 4.32, "filler": false, "recap": false },
+                                        { "mal_id": 2, "title": "Stray Dog Strut", "score": 4.18, "filler": false, "recap": false }
+                                      ]
+                                    }""")));
+
+            AnimeRequestDto dto = new AnimeRequestDto(
+                    "Cowboy Bebop", 26, "1", AnimeStatus.WATCHED, null, null);
+            AnimeResponseDto created = restTemplate.postForEntity(
+                    "/api/animes", dto, AnimeResponseDto.class).getBody();
+
+            animeRepository.findById(created.id()).ifPresent(a -> {
+                a.setMalId(1L);
+                animeRepository.save(a);
+            });
+
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    "/api/animes/" + created.id() + "/detail", Map.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody().get("name")).isEqualTo("Cowboy Bebop");
+            assertThat(response.getBody().get("malId")).isEqualTo(1);
+            assertThat((List) response.getBody().get("episodesList")).hasSize(2);
+            assertThat((List) response.getBody().get("categoryNames")).isEmpty();
+        }
+
+        @Test
+        void shouldGetDetail_WithoutMalId_ReturnsNoEpisodes() {
+            AnimeRequestDto dto = new AnimeRequestDto(
+                    "Original Anime", 12, "1", AnimeStatus.WATCHING, null, null);
+            AnimeResponseDto created = restTemplate.postForEntity(
+                    "/api/animes", dto, AnimeResponseDto.class).getBody();
+
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    "/api/animes/" + created.id() + "/detail", Map.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody().get("name")).isEqualTo("Original Anime");
+            assertThat((List) response.getBody().get("episodesList")).isEmpty();
+        }
+
+        @Test
+        void shouldGetDetail_JikanFails_ReturnsGracefully() {
+            wireMock.stubFor(get(urlPathEqualTo("/anime/99/episodes"))
+                    .willReturn(aResponse().withStatus(500)));
+
+            AnimeRequestDto dto = new AnimeRequestDto(
+                    "Fail Anime", 12, "1", AnimeStatus.WATCHING, null, null);
+            AnimeResponseDto created = restTemplate.postForEntity(
+                    "/api/animes", dto, AnimeResponseDto.class).getBody();
+
+            animeRepository.findById(created.id()).ifPresent(a -> {
+                a.setMalId(99L);
+                animeRepository.save(a);
+            });
+
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    "/api/animes/" + created.id() + "/detail", Map.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody().get("name")).isEqualTo("Fail Anime");
+            assertThat(response.getBody().get("malId")).isEqualTo(99);
+            assertThat((List) response.getBody().get("episodesList")).isEmpty();
+        }
+
+        @Test
+        void shouldGetDetail_AnimeNotFound_Returns404() {
+            ResponseEntity<Map> response = restTemplate.getForEntity(
+                    "/api/animes/9999/detail", Map.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         }
     }
 }

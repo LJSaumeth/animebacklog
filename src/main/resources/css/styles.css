@@ -203,3 +203,29 @@
     -fx-border-color: #9929EA;
     -fx-border-width: 0.5;
 }
+
+.detail-title {
+    -fx-text-fill: #FAEB92;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.detail-subtitle {
+    -fx-text-fill: #9929EA;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 4 0;
+}
+
+.detail-info {
+    -fx-text-fill: #AAAAAA;
+    -fx-font-size: 13px;
+}
+
+.category-chip {
+    -fx-background-color: #9929EA;
+    -fx-text-fill: #FAEB92;
+    -fx-font-size: 11px;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 10;
+}
