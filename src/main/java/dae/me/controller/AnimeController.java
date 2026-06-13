@@ -51,8 +51,8 @@ public class AnimeController {
     public ResponseEntity<PagedResponseDto<AnimeResponseDto>> findAll(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Integer minRating,
-            @RequestParam(required = false) Integer maxRating,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Double maxRating,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "asc") String order,
@@ -132,7 +132,7 @@ public class AnimeController {
             return AnimeStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
-                    "Invalid status: " + status + ". Allowed: ONGOING, COMPLETED, HIATUS");
+                    "Invalid status: " + status + ". Allowed: WATCHING, WATCHED, ON_HOLD, DROPPED, PLANNING_TO_WATCH");
         }
     }
 }

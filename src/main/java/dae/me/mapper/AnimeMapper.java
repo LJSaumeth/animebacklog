@@ -35,7 +35,7 @@ public class AnimeMapper {
                 entity.getStatus(),
                 entity.getImageUrl(),
                 entity.getMalId(),
-                entity.getRating(),
+                entity.getRating() != null ? entity.getRating().doubleValue() : null,
                 categoryIds
         );
     }

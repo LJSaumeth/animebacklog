@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dae.me.javafx.controller.AnimeGalleryController">
+
+    <top>
+        <Label text="Galeria"
+               style="-fx-font-size: 22px; -fx-text-fill: #FAEB92; -fx-font-weight: bold;">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+        </Label>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background: #000000;">
+            <FlowPane fx:id="galleryPane" hgap="16" vgap="16"
+                      style="-fx-background-color: #000000;">
+                <padding>
+                    <Insets topRightBottomLeft="20"/>
+                </padding>
+            </FlowPane>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

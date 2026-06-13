@@ -22,7 +22,7 @@ class AnimeServiceTest {
     @Test
     void shouldCreateAndFindAnime() {
         AnimeRequestDto dto = new AnimeRequestDto(
-                "Fullmetal Alchemist", 64, "1", AnimeStatus.COMPLETED, null, null);
+                "Fullmetal Alchemist", 64, "1", AnimeStatus.WATCHED, null, null);
 
         AnimeResponseDto created = animeService.saveAnime(dto);
 
@@ -36,7 +36,7 @@ class AnimeServiceTest {
     @Test
     void shouldThrowOnDuplicateName() {
         AnimeRequestDto dto = new AnimeRequestDto(
-                "One Piece", 1000, "1", AnimeStatus.ONGOING, null, null);
+                "One Piece", 1000, "1", AnimeStatus.WATCHING, null, null);
         animeService.saveAnime(dto);
 
         assertThatThrownBy(() -> animeService.saveAnime(dto))

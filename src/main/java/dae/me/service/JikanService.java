@@ -33,7 +33,8 @@ public class JikanService {
                         item.episodes(),
                         item.status(),
                         item.synopsis(),
-                        item.year()
+                        item.year(),
+                        Collections.emptyList()
                 ))
                 .toList();
     }
@@ -53,7 +54,10 @@ public class JikanService {
                 data.episodes(),
                 data.status(),
                 data.synopsis(),
-                data.year()
+                data.year(),
+                data.genres() != null
+                        ? data.genres().stream().map(JikanAnimeResponse.JikanGenre::name).toList()
+                        : Collections.emptyList()
         );
     }
 

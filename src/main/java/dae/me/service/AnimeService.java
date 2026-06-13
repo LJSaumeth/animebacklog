@@ -2,13 +2,16 @@ package dae.me.service;
 
 import dae.me.dto.AnimeRequestDto;
 import dae.me.dto.AnimeResponseDto;
+import dae.me.dto.CategoryRequestDto;
 import dae.me.dto.ImportAnimeRequest;
 import dae.me.dto.PagedResponseDto;
 import dae.me.dto.jikan.JikanAnimeItemDto;
 import dae.me.entity.Anime;
 import dae.me.entity.Anime.AnimeStatus;
+import dae.me.entity.Category;
 import dae.me.mapper.AnimeMapper;
 import dae.me.repository.AnimeRepository;
+import dae.me.repository.CategoryRepository;
 import dae.me.specification.AnimeSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,8 +32,10 @@ import java.util.List;
 public class AnimeService {
 
     private final AnimeRepository animeRepository;
+    private final CategoryRepository categoryRepository;
     private final JikanService jikanService;
     private final CategoryService categoryService;
+    private final ImageService imageService;
 
     @Transactional
     public AnimeResponseDto saveAnime(AnimeRequestDto dto) {
@@ -52,10 +58,10 @@ public class AnimeService {
 
     @Transactional(readOnly = true)
     public PagedResponseDto<AnimeResponseDto> findAll(String search, AnimeStatus status,
-                                                       Integer minRating, Integer maxRating,
-                                                       Long categoryId,
-                                                       String sort, String order,
-                                                       int page, int size) {
+            Double minRating, Double maxRating,
+            Long categoryId,
+            String sort, String order,
+            int page, int size) {
         Specification<Anime> spec = AnimeSpecification.combine(search, status, minRating, maxRating, categoryId);
         Sort sortObj = buildSort(sort, order);
         Pageable pageable = PageRequest.of(page, size, sortObj);
@@ -70,13 +76,13 @@ public class AnimeService {
                 result.getNumber(),
                 result.getSize(),
                 result.getTotalElements(),
-                result.getTotalPages()
-        );
+                result.getTotalPages());
     }
 
     private Sort buildSort(String sort, String order) {
         Sort.Direction direction = "desc".equalsIgnoreCase(order)
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
 
         String sortField = switch (sort.toLowerCase()) {
             case "name" -> "animeName";
@@ -135,14 +141,15 @@ public class AnimeService {
 
         AnimeStatus status = mapJikanStatus(jikan.status());
 
+        String imagePath = imageService.downloadImage(jikan.imageUrl(), request.malId());
+
         AnimeRequestDto dto = new AnimeRequestDto(
                 jikan.title(),
                 jikan.episodes() != null ? jikan.episodes() : 0,
                 "1",
                 status,
-                jikan.imageUrl(),
-                null
-        );
+                imagePath,
+                null);
 
         Anime anime = AnimeMapper.toEntity(dto);
         anime.setMalId(request.malId());
@@ -153,11 +160,39 @@ public class AnimeService {
             throw new DataIntegrityViolationException(
                     "Anime with name '" + dto.name() + "' already exists");
         }
+
+        List<Long> categoryIds = new ArrayList<>();
+        if (jikan.genres() != null) {
+            for (String genreName : jikan.genres()) {
+                categoryIds.add(findOrCreateCategory(genreName));
+            }
+        }
+        if (!categoryIds.isEmpty()) {
+            anime.getCategories().clear();
+            anime.getCategories().addAll(categoryRepository.findAllById(categoryIds));
+            animeRepository.save(anime);
+        }
+
         return AnimeMapper.toDto(anime);
     }
 
+    private Long findOrCreateCategory(String name) {
+        return categoryRepository.findByName(name)
+                .map(Category::getId)
+                .orElseGet(() -> {
+                    Category cat = Category.builder().name(name).build();
+                    try {
+                        return categoryRepository.save(cat).getId();
+                    } catch (DataIntegrityViolationException e) {
+                        return categoryRepository.findByName(name)
+                                .map(Category::getId)
+                                .orElseThrow();
+                    }
+                });
+    }
+
     @Transactional
-    public AnimeResponseDto rateAnime(Long id, Integer score) {
+    public AnimeResponseDto rateAnime(Long id, Double score) {
         Anime anime = animeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Anime not found with id " + id));
         anime.setRating(score);
@@ -185,10 +220,34 @@ public class AnimeService {
         return AnimeMapper.toDto(animeRepository.save(anime));
     }
 
+    @Transactional
+    public void processJikanGenres(Long animeId, Long malId) {
+        if (malId == null)
+            return;
+        JikanAnimeItemDto jikan = jikanService.getAnimeById(malId);
+        if (jikan.genres() == null || jikan.genres().isEmpty())
+            return;
+
+        Anime anime = animeRepository.findById(animeId)
+                .orElseThrow(() -> new EntityNotFoundException("Anime not found with id " + animeId));
+
+        for (String genreName : jikan.genres()) {
+            Long catId = findOrCreateCategory(genreName);
+            Category cat = categoryRepository.findById(catId).orElse(null);
+            if (cat != null) {
+                anime.getCategories().add(cat);
+            }
+        }
+        animeRepository.save(anime);
+    }
+
     private AnimeStatus mapJikanStatus(String jikanStatus) {
-        if (jikanStatus == null) return AnimeStatus.COMPLETED;
-        if (jikanStatus.toLowerCase().contains("airing")) return AnimeStatus.ONGOING;
-        if (jikanStatus.toLowerCase().contains("finished")) return AnimeStatus.COMPLETED;
-        return AnimeStatus.COMPLETED;
+        if (jikanStatus == null)
+            return AnimeStatus.PLANNING_TO_WATCH;
+        if (jikanStatus.toLowerCase().contains("airing"))
+            return AnimeStatus.WATCHING;
+        if (jikanStatus.toLowerCase().contains("finished"))
+            return AnimeStatus.WATCHED;
+        return AnimeStatus.PLANNING_TO_WATCH;
     }
 }

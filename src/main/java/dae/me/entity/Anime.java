@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @EqualsAndHashCode(exclude = "categories")
-@ToString(exclude = {"imageUrl", "categories"})
+@ToString(exclude = { "imageUrl", "categories" })
 @Builder
 @Entity
 @Table(name = "Animes")
@@ -47,7 +47,7 @@ public class Anime {
     private String seasons;
 
     public enum AnimeStatus {
-        ONGOING, COMPLETED, HIATUS
+        WATCHING, WATCHED, ON_HOLD, DROPPED, PLANNING_TO_WATCH
     }
 
     @Column(name = "status", nullable = false)
@@ -61,14 +61,10 @@ public class Anime {
     private Long malId;
 
     @Column(name = "rating")
-    private Integer rating;
+    private Double rating;
 
     @ManyToMany
-    @JoinTable(
-            name = "anime_categories",
-            joinColumns = @JoinColumn(name = "anime_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
+    @JoinTable(name = "anime_categories", joinColumns = @JoinColumn(name = "anime_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     @Builder.Default
     private Set<Category> categories = new HashSet<>();
 }

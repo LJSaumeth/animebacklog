@@ -22,7 +22,7 @@ public record AnimeRequestDto(
 
     String imageUrl,
 
-    @Min(value = 1, message = "Rating must be between 1 and 10")
-    @Max(value = 10, message = "Rating must be between 1 and 10")
-    Integer rating
+    @Min(value = 0, message = "Rating must be between 0 and 5")
+    @Max(value = 5, message = "Rating must be between 0 and 5")
+    Double rating
 ) {}

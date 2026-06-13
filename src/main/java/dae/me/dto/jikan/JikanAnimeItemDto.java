@@ -1,6 +1,6 @@
 package dae.me.dto.jikan;
 
-import dae.me.entity.Anime.AnimeStatus;
+import java.util.List;
 
 public record JikanAnimeItemDto(
         Long malId,
@@ -9,5 +9,6 @@ public record JikanAnimeItemDto(
         Integer episodes,
         String status,
         String synopsis,
-        Integer year
+        Integer year,
+        List<String> genres
 ) {}

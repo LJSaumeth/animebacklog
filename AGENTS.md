@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Spring Boot 3.5.5 / Java 25 / Maven / H2 (embedded) / Lombok project. Base package: `dae.me`. Single-user local desktop app — no external DB server, no auth.
+Spring Boot 3.5.5 / Java 25 / Maven / H2 (embedded) / Lombok / JavaFX project. Base package: `dae.me`. Single-user local desktop app — no external DB server, no auth.
 
 ## Commands
 
@@ -20,28 +20,40 @@ mvnw.cmd test -Dtest=MyTestClass
 
 ## Architecture
 
-| Layer      | Package                       |
-| ---------- | ----------------------------- |
-| Entry      | `dae.me.Application`          |
-| Controller | `dae.me.controller`           |
-| DTO        | `dae.me.dto`                  |
-| Mapper     | `dae.me.mapper`               |
-| Entity     | `dae.me.entity`               |
-| Repo       | `dae.me.repository`           |
-| Service    | `dae.me.service`              |
-| Exception  | `dae.me.exception`            |
-| Spec       | `dae.me.specification`        |
-| Client     | `dae.me.client` (Jikan HTTP)  |
+| Layer       | Package                              |
+| ----------- | ------------------------------------ |
+| Entry       | `dae.me.Main`                       |
+| Backend     | `dae.me.controller` / `service` / `repository` / `entity` / `dto` |
+| Frontend    | `dae.me.javafx`                      |
+| JavaFX View | `dae.me.javafx.view` (.fxml files)   |
+| JavaFX Ctrl | `dae.me.javafx.controller`           |
+| DTO         | `dae.me.dto`                         |
+| Mapper      | `dae.me.mapper`                      |
+| Entity      | `dae.me.entity`                      |
+| Repo        | `dae.me.repository`                  |
+| Service     | `dae.me.service`                     |
+| Exception   | `dae.me.exception`                   |
+| Spec        | `dae.me.specification`               |
+| Client      | `dae.me.client` (Jikan HTTP)         |
+
+**Frontend → Backend communication**: JavaFX controllers call Spring services directly via DI (no HTTP/REST between layers). REST controllers exist but are only used by the JavaFX UI or kept for external testing.
+
+**JavaFX + Spring integration**: `SpringFxWeaver` provides a custom `Callback<Class<?>, Object>` for `FXMLLoader` that fetches controllers from Spring's `ApplicationContext`, enabling `@Autowired` in JavaFX controllers.
 
 ## Features (specs in `DOCS/specs/`)
 
 | #  | Feature                 | Status |
 | -- | ----------------------- | ------ |
-| 01 | Anime CRUD + DTOs       | planned |
-| 02 | Search, filter, sort    | planned |
-| 03 | Jikan API integration   | planned |
-| 04 | Rating system           | planned |
-| 05 | Categories & tags       | planned |
+| 01 | Anime CRUD + DTOs       | done |
+| 02 | Search, filter, sort    | done |
+| 03 | Jikan API integration   | done |
+| 04 | Rating system           | done |
+| 05 | Categories & tags       | done |
+| 06 | Main Shell + Nav (FX)   | done |
+| 07 | Anime List View (FX)    | planned |
+| 08 | Anime Form + Jikan (FX) | planned |
+| 09 | Category Manager (FX)   | planned |
+| 10 | Rating UI (FX)          | planned |
 
 ## Gotchas
 

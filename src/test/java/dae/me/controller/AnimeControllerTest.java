@@ -43,7 +43,7 @@ class AnimeControllerTest {
         @Test
         void shouldCreateAnime_Returns201() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Steins;Gate", 24, "1", AnimeStatus.COMPLETED, null, null);
+                    "Steins;Gate", 24, "1", AnimeStatus.WATCHED, null, null);
 
             ResponseEntity<AnimeResponseDto> response = restTemplate.postForEntity(
                     "/api/animes", dto, AnimeResponseDto.class);
@@ -53,13 +53,13 @@ class AnimeControllerTest {
             assertThat(response.getBody().id()).isNotNull();
             assertThat(response.getBody().name()).isEqualTo("Steins;Gate");
             assertThat(response.getBody().episodes()).isEqualTo(24);
-            assertThat(response.getBody().status()).isEqualTo(AnimeStatus.COMPLETED);
+            assertThat(response.getBody().status()).isEqualTo(AnimeStatus.WATCHED);
         }
 
         @Test
         void shouldCreateAnime_DuplicateName_Returns409() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Naruto", 220, "1", AnimeStatus.COMPLETED, null, null);
+                    "Naruto", 220, "1", AnimeStatus.WATCHED, null, null);
             restTemplate.postForEntity("/api/animes", dto, AnimeResponseDto.class);
 
             ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -71,7 +71,7 @@ class AnimeControllerTest {
         @Test
         void shouldCreateAnime_BlankName_Returns400() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "", 12, "1", AnimeStatus.ONGOING, null, null);
+                    "", 12, "1", AnimeStatus.WATCHING, null, null);
 
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     "/api/animes", dto, Map.class);
@@ -82,7 +82,7 @@ class AnimeControllerTest {
         @Test
         void shouldCreateAnime_NegativeEpisodes_Returns400() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Test", -1, "1", AnimeStatus.ONGOING, null, null);
+                    "Test", -1, "1", AnimeStatus.WATCHING, null, null);
 
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     "/api/animes", dto, Map.class);
@@ -120,9 +120,9 @@ class AnimeControllerTest {
 
         @Test
         void shouldSearchByName_ReturnsMatches() {
-            AnimeRequestDto dto1 = new AnimeRequestDto("Naruto", 220, "1", AnimeStatus.COMPLETED, null, null);
-            AnimeRequestDto dto2 = new AnimeRequestDto("Naruto Shippuden", 500, "1", AnimeStatus.COMPLETED, null, null);
-            AnimeRequestDto dto3 = new AnimeRequestDto("One Piece", 1000, "1", AnimeStatus.ONGOING, null, null);
+            AnimeRequestDto dto1 = new AnimeRequestDto("Naruto", 220, "1", AnimeStatus.WATCHED, null, null);
+            AnimeRequestDto dto2 = new AnimeRequestDto("Naruto Shippuden", 500, "1", AnimeStatus.WATCHED, null, null);
+            AnimeRequestDto dto3 = new AnimeRequestDto("One Piece", 1000, "1", AnimeStatus.WATCHING, null, null);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto3, AnimeResponseDto.class);
@@ -148,13 +148,13 @@ class AnimeControllerTest {
 
         @Test
         void shouldFilterByStatus_ReturnsFiltered() {
-            AnimeRequestDto dto1 = new AnimeRequestDto("Bleach", 366, "1", AnimeStatus.ONGOING, null, null);
-            AnimeRequestDto dto2 = new AnimeRequestDto("Death Note", 37, "1", AnimeStatus.COMPLETED, null, null);
+            AnimeRequestDto dto1 = new AnimeRequestDto("Bleach", 366, "1", AnimeStatus.WATCHING, null, null);
+            AnimeRequestDto dto2 = new AnimeRequestDto("Death Note", 37, "1", AnimeStatus.WATCHED, null, null);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
 
             ResponseEntity<Map> response = restTemplate.getForEntity(
-                    "/api/animes?status=ONGOING", Map.class);
+                    "/api/animes?status=WATCHING", Map.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             Map body = response.getBody();
@@ -171,8 +171,8 @@ class AnimeControllerTest {
 
         @Test
         void shouldSortByNameAsc() {
-            AnimeRequestDto dto1 = new AnimeRequestDto("Clannad", 23, "1", AnimeStatus.COMPLETED, null, null);
-            AnimeRequestDto dto2 = new AnimeRequestDto("Anohana", 11, "1", AnimeStatus.COMPLETED, null, null);
+            AnimeRequestDto dto1 = new AnimeRequestDto("Clannad", 23, "1", AnimeStatus.WATCHED, null, null);
+            AnimeRequestDto dto2 = new AnimeRequestDto("Anohana", 11, "1", AnimeStatus.WATCHED, null, null);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
 
@@ -188,8 +188,8 @@ class AnimeControllerTest {
 
         @Test
         void shouldSortByEpisodesDesc() {
-            AnimeRequestDto dto1 = new AnimeRequestDto("Short", 12, "1", AnimeStatus.COMPLETED, null, null);
-            AnimeRequestDto dto2 = new AnimeRequestDto("Long", 64, "1", AnimeStatus.COMPLETED, null, null);
+            AnimeRequestDto dto1 = new AnimeRequestDto("Short", 12, "1", AnimeStatus.WATCHED, null, null);
+            AnimeRequestDto dto2 = new AnimeRequestDto("Long", 64, "1", AnimeStatus.WATCHED, null, null);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
 
@@ -214,7 +214,7 @@ class AnimeControllerTest {
         void shouldPaginateResults() {
             for (int i = 1; i <= 5; i++) {
                 AnimeRequestDto dto = new AnimeRequestDto(
-                        "Anime " + i, i * 12, "1", AnimeStatus.COMPLETED, null, null);
+                        "Anime " + i, i * 12, "1", AnimeStatus.WATCHED, null, null);
                 restTemplate.postForEntity("/api/animes", dto, AnimeResponseDto.class);
             }
 
@@ -230,15 +230,15 @@ class AnimeControllerTest {
 
         @Test
         void shouldCombineFilters() {
-            AnimeRequestDto dto1 = new AnimeRequestDto("Tokyo Ghoul", 48, "2", AnimeStatus.COMPLETED, null, null);
-            AnimeRequestDto dto2 = new AnimeRequestDto("Tokyo Revengers", 24, "1", AnimeStatus.ONGOING, null, null);
-            AnimeRequestDto dto3 = new AnimeRequestDto("Kyoto Animation", 12, "1", AnimeStatus.COMPLETED, null, null);
+            AnimeRequestDto dto1 = new AnimeRequestDto("Tokyo Ghoul", 48, "2", AnimeStatus.WATCHED, null, null);
+            AnimeRequestDto dto2 = new AnimeRequestDto("Tokyo Revengers", 24, "1", AnimeStatus.WATCHING, null, null);
+            AnimeRequestDto dto3 = new AnimeRequestDto("Kyoto Animation", 12, "1", AnimeStatus.WATCHED, null, null);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto3, AnimeResponseDto.class);
 
             ResponseEntity<Map> response = restTemplate.getForEntity(
-                    "/api/animes?search=tokyo&status=COMPLETED&sort=episodes&order=desc", Map.class);
+                    "/api/animes?search=tokyo&status=WATCHED&sort=episodes&order=desc", Map.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             Map body = response.getBody();
@@ -270,7 +270,7 @@ class AnimeControllerTest {
         @Test
         void shouldGetAnimeById_Returns200() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Cowboy Bebop", 26, "1", AnimeStatus.COMPLETED, null, null);
+                    "Cowboy Bebop", 26, "1", AnimeStatus.WATCHED, null, null);
             ResponseEntity<AnimeResponseDto> created = restTemplate.postForEntity(
                     "/api/animes", dto, AnimeResponseDto.class);
 
@@ -296,12 +296,12 @@ class AnimeControllerTest {
         @Test
         void shouldUpdateAnime_Returns200() {
             AnimeRequestDto create = new AnimeRequestDto(
-                    "Attack on Titan", 25, "1", AnimeStatus.ONGOING, null, null);
+                    "Attack on Titan", 25, "1", AnimeStatus.WATCHING, null, null);
             ResponseEntity<AnimeResponseDto> created = restTemplate.postForEntity(
                     "/api/animes", create, AnimeResponseDto.class);
 
             AnimeRequestDto update = new AnimeRequestDto(
-                    "Attack on Titan Final", 87, "4", AnimeStatus.COMPLETED, null, null);
+                    "Attack on Titan Final", 87, "4", AnimeStatus.WATCHED, null, null);
             restTemplate.put("/api/animes/" + created.getBody().id(), update);
 
             ResponseEntity<AnimeResponseDto> response = restTemplate.getForEntity(
@@ -310,13 +310,13 @@ class AnimeControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody().name()).isEqualTo("Attack on Titan Final");
             assertThat(response.getBody().episodes()).isEqualTo(87);
-            assertThat(response.getBody().status()).isEqualTo(AnimeStatus.COMPLETED);
+            assertThat(response.getBody().status()).isEqualTo(AnimeStatus.WATCHED);
         }
 
         @Test
         void shouldUpdateAnime_NotFound_Returns404() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Ghost", 12, "1", AnimeStatus.COMPLETED, null, null);
+                    "Ghost", 12, "1", AnimeStatus.WATCHED, null, null);
             restTemplate.put("/api/animes/9999", dto);
 
             ResponseEntity<Map> response = restTemplate.getForEntity(
@@ -332,7 +332,7 @@ class AnimeControllerTest {
         @Test
         void shouldDeleteAnime_Returns204() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Erased", 12, "1", AnimeStatus.COMPLETED, null, null);
+                    "Erased", 12, "1", AnimeStatus.WATCHED, null, null);
             ResponseEntity<AnimeResponseDto> created = restTemplate.postForEntity(
                     "/api/animes", dto, AnimeResponseDto.class);
 
@@ -362,27 +362,27 @@ class AnimeControllerTest {
         @Test
         void shouldRateAnime_ReturnsUpdated() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Steins;Gate", 24, "1", AnimeStatus.COMPLETED, null, null);
+                    "Steins;Gate", 24, "1", AnimeStatus.WATCHED, null, null);
             AnimeResponseDto created = restTemplate.postForEntity(
                     "/api/animes", dto, AnimeResponseDto.class).getBody();
 
-            RatingRequest rating = new RatingRequest(8);
+            RatingRequest rating = new RatingRequest(4.0);
             restTemplate.put("/api/animes/" + created.id() + "/rating", rating);
 
             ResponseEntity<AnimeResponseDto> response = restTemplate.getForEntity(
                     "/api/animes/" + created.id(), AnimeResponseDto.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody().rating()).isEqualTo(8);
+            assertThat(response.getBody().rating()).isEqualTo(4.0);
         }
 
         @Test
         void shouldRemoveRating_ReturnsNull() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Madoka", 12, "1", AnimeStatus.COMPLETED, null, 5);
+                    "Madoka", 12, "1", AnimeStatus.WATCHED, null, 2.5);
             AnimeResponseDto created = restTemplate.postForEntity(
                     "/api/animes", dto, AnimeResponseDto.class).getBody();
-            assertThat(created.rating()).isEqualTo(5);
+            assertThat(created.rating()).isEqualTo(2.5);
 
             ResponseEntity<AnimeResponseDto> removed = restTemplate.exchange(
                     "/api/animes/" + created.id() + "/rating",
@@ -397,11 +397,11 @@ class AnimeControllerTest {
         @Test
         void shouldRateAnime_InvalidScore_Returns400() {
             AnimeRequestDto dto = new AnimeRequestDto(
-                    "Test", 12, "1", AnimeStatus.COMPLETED, null, null);
+                    "Test", 12, "1", AnimeStatus.WATCHED, null, null);
             AnimeResponseDto created = restTemplate.postForEntity(
                     "/api/animes", dto, AnimeResponseDto.class).getBody();
 
-            RatingRequest rating = new RatingRequest(15);
+            RatingRequest rating = new RatingRequest(15.0);
             ResponseEntity<Map> response = restTemplate.exchange(
                     "/api/animes/" + created.id() + "/rating",
                     HttpMethod.PUT,
@@ -414,17 +414,17 @@ class AnimeControllerTest {
         @Test
         void shouldFilterByMinRating() {
             AnimeRequestDto dto1 = new AnimeRequestDto(
-                    "A", 12, "1", AnimeStatus.COMPLETED, null, 4);
+                    "A", 12, "1", AnimeStatus.WATCHED, null, 2.0);
             AnimeRequestDto dto2 = new AnimeRequestDto(
-                    "B", 12, "1", AnimeStatus.COMPLETED, null, 8);
+                    "B", 12, "1", AnimeStatus.WATCHED, null, 4.0);
             AnimeRequestDto dto3 = new AnimeRequestDto(
-                    "C", 12, "1", AnimeStatus.COMPLETED, null, 9);
+                    "C", 12, "1", AnimeStatus.WATCHED, null, 4.5);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto3, AnimeResponseDto.class);
 
             ResponseEntity<Map> response = restTemplate.getForEntity(
-                    "/api/animes?minRating=7", Map.class);
+                    "/api/animes?minRating=3.5", Map.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             List<Map> content = (List<Map>) response.getBody().get("content");
@@ -434,11 +434,11 @@ class AnimeControllerTest {
         @Test
         void shouldSortByRatingDesc() {
             AnimeRequestDto dto1 = new AnimeRequestDto(
-                    "Low", 12, "1", AnimeStatus.COMPLETED, null, 3);
+                    "Low", 12, "1", AnimeStatus.WATCHED, null, 1.5);
             AnimeRequestDto dto2 = new AnimeRequestDto(
-                    "High", 12, "1", AnimeStatus.COMPLETED, null, 9);
+                    "High", 12, "1", AnimeStatus.WATCHED, null, 5.0);
             AnimeRequestDto dto3 = new AnimeRequestDto(
-                    "Mid", 12, "1", AnimeStatus.COMPLETED, null, 6);
+                    "Mid", 12, "1", AnimeStatus.WATCHED, null, 3.0);
             restTemplate.postForEntity("/api/animes", dto1, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto2, AnimeResponseDto.class);
             restTemplate.postForEntity("/api/animes", dto3, AnimeResponseDto.class);
@@ -448,9 +448,9 @@ class AnimeControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             List<Map> content = (List<Map>) response.getBody().get("content");
-            assertThat(content.get(0).get("rating")).isEqualTo(9);
-            assertThat(content.get(1).get("rating")).isEqualTo(6);
-            assertThat(content.get(2).get("rating")).isEqualTo(3);
+            assertThat(content.get(0).get("rating")).isEqualTo(5.0);
+            assertThat(content.get(1).get("rating")).isEqualTo(3.0);
+            assertThat(content.get(2).get("rating")).isEqualTo(1.5);
         }
     }
 }

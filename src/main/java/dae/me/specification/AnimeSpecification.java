@@ -14,7 +14,7 @@ public class AnimeSpecification {
     private AnimeSpecification() {}
 
     public static Specification<Anime> combine(String search, AnimeStatus status,
-                                                Integer minRating, Integer maxRating,
+                                                Double minRating, Double maxRating,
                                                 Long categoryId) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();

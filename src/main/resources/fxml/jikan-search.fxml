@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dae.me.javafx.controller.JikanSearchController">
+
+    <top>
+        <VBox spacing="8">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+            <Label text="Buscar Anime en MyAnimeList (Jikan)"
+                   style="-fx-font-size: 20px; -fx-text-fill: #FAEB92; -fx-font-weight: bold;"/>
+
+            <HBox spacing="8">
+                <TextField fx:id="searchField" promptText="Buscar anime..."
+                           HBox.hgrow="ALWAYS" onAction="#onSearch"/>
+                <Button text="Buscar" onAction="#onSearch"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <BorderPane>
+            <center>
+                <ListView fx:id="resultsList" prefHeight="400"/>
+            </center>
+            <bottom>
+                <HBox fx:id="loadingBox" spacing="10" alignment="CENTER"
+                      visible="false">
+                    <padding>
+                        <Insets topRightBottomLeft="12"/>
+                    </padding>
+                    <ProgressIndicator prefWidth="24" prefHeight="24"/>
+                    <Label text="Buscando..." fx:id="loadingLabel"/>
+                </HBox>
+            </bottom>
+        </BorderPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_RIGHT">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+            <Label fx:id="errorLabel" styleClass="error"/>
+            <Button text="Volver" onAction="#onBack"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

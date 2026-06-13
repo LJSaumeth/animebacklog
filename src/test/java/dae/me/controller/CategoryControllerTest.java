@@ -124,7 +124,7 @@ class CategoryControllerTest {
                     CategoryResponseDto.class).getBody();
 
             AnimeResponseDto anime = restTemplate.postForEntity("/api/animes",
-                    new AnimeRequestDto("Naruto", 220, "1", AnimeStatus.COMPLETED, null, null),
+                    new AnimeRequestDto("Naruto", 220, "1", AnimeStatus.WATCHED, null, null),
                     AnimeResponseDto.class).getBody();
 
             AssignCategoriesRequest request = new AssignCategoriesRequest(
@@ -149,7 +149,7 @@ class CategoryControllerTest {
                     CategoryResponseDto.class).getBody();
 
             AnimeResponseDto anime = restTemplate.postForEntity("/api/animes",
-                    new AnimeRequestDto("Steins;Gate", 24, "1", AnimeStatus.COMPLETED, null, null),
+                    new AnimeRequestDto("Steins;Gate", 24, "1", AnimeStatus.WATCHED, null, null),
                     AnimeResponseDto.class).getBody();
 
             restTemplate.exchange("/api/animes/" + anime.id() + "/categories",
@@ -175,10 +175,10 @@ class CategoryControllerTest {
                     CategoryResponseDto.class).getBody();
 
             AnimeResponseDto a1 = restTemplate.postForEntity("/api/animes",
-                    new AnimeRequestDto("Tokyo Ghoul", 48, "2", AnimeStatus.COMPLETED, null, null),
+                    new AnimeRequestDto("Tokyo Ghoul", 48, "2", AnimeStatus.WATCHED, null, null),
                     AnimeResponseDto.class).getBody();
             AnimeResponseDto a2 = restTemplate.postForEntity("/api/animes",
-                    new AnimeRequestDto("Another", 12, "1", AnimeStatus.COMPLETED, null, null),
+                    new AnimeRequestDto("Another", 12, "1", AnimeStatus.WATCHED, null, null),
                     AnimeResponseDto.class).getBody();
 
             restTemplate.exchange("/api/animes/" + a1.id() + "/categories",

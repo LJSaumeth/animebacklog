@@ -12,6 +12,6 @@ public record AnimeResponseDto(
     AnimeStatus status,
     String imageUrl,
     Long malId,
-    Integer rating,
+    Double rating,
     List<Long> categoryIds
 ) {}
