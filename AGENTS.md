@@ -25,20 +25,26 @@ mvnw.cmd test -Dtest=MyTestClass
 | Entry       | `dae.me.Main`                       |
 | Backend     | `dae.me.controller` / `service` / `repository` / `entity` / `dto` |
 | Frontend    | `dae.me.javafx`                      |
-| JavaFX View | `dae.me.javafx.view` (.fxml files)   |
-| JavaFX Ctrl | `dae.me.javafx.controller`           |
-| DTO         | `dae.me.dto`                         |
+| JavaFX View | `dae.me.javafx.view` (.fxml files under `src/main/resources/fxml/`) |
+| JavaFX Ctrl | `dae.me.javafx.controller`          |
+| DTO         | `dae.me.dto` (Jikan DTOs in `dae.me.dto.jikan`) |
 | Mapper      | `dae.me.mapper`                      |
 | Entity      | `dae.me.entity`                      |
 | Repo        | `dae.me.repository`                  |
 | Service     | `dae.me.service`                     |
 | Exception   | `dae.me.exception`                   |
 | Spec        | `dae.me.specification`               |
-| Client      | `dae.me.client` (Jikan HTTP)         |
+| Client      | `dae.me.client` (Jikan HTTP via `RestClient`) |
 
-**Frontend → Backend communication**: JavaFX controllers call Spring services directly via DI (no HTTP/REST between layers). REST controllers exist but are only used by the JavaFX UI or kept for external testing.
+**Startup flow**: `Main.main()` → `Application.launch(JavaFxApplication.class)` → `JavaFxApplication.init()` boots Spring with `.headless(false)` → `start()` loads `main.fxml` using `SpringFxWeaver` as `controllerFactory`.
 
-**JavaFX + Spring integration**: `SpringFxWeaver` provides a custom `Callback<Class<?>, Object>` for `FXMLLoader` that fetches controllers from Spring's `ApplicationContext`, enabling `@Autowired` in JavaFX controllers.
+**SpringFxWeaver**: `@Component` implementing `Callback<Class<?>, Object>` — fetches JavaFX controllers from Spring's `ApplicationContext`, enabling `@Autowired`/constructor injection in `@Component`-annotated controllers.
+
+**Frontend → Backend communication**: JavaFX controllers call Spring services directly via DI (no HTTP/REST between layers). REST controllers exist for structure but are not called over HTTP internally.
+
+**Navigation**: `NavigationService` interface (implemented by `MainController`) provides `navigateTo(fxmlPath)`, `navigateToAnimeForm(anime)`, and `refreshCurrentView()`. All views are swapped into `MainController`'s `StackPane contentArea`.
+
+**JikanDataHolder**: `@Component` used to pass Jikan search results from `JikanSearchController` to `AnimeFormController` for import.
 
 ## Features (specs in `DOCS/specs/`)
 
@@ -50,21 +56,25 @@ mvnw.cmd test -Dtest=MyTestClass
 | 04 | Rating system           | done |
 | 05 | Categories & tags       | done |
 | 06 | Main Shell + Nav (FX)   | done |
-| 07 | Anime List View (FX)    | planned |
-| 08 | Anime Form + Jikan (FX) | planned |
-| 09 | Category Manager (FX)   | planned |
-| 10 | Rating UI (FX)          | planned |
+| 07 | Anime List View (FX)    | done |
+| 08 | Anime Form + Jikan (FX) | done |
+| 09 | Category Manager (FX)   | done |
+| 10 | Rating UI (FX)          | done |
 
 ## Gotchas
 
-- **H2 no PostgreSQL.** The DB is embedded H2 in file mode (`jdbc:h2:file:./data/animebacklog`). No PostgreSQL server needed. PostgreSQL dependency should be removed from `pom.xml` and replaced with `com.h2database:h2`.
-- **Tests use H2 in-memory.** No Testcontainers needed. `application-test.properties` should use `jdbc:h2:mem:testdb`.
-- **H2 console** is useful for debugging: enable via `spring.h2.console.enabled=true`, access at `/h2-console`.
+- **H2 embedded in file mode** — `jdbc:h2:file:./data/animebacklog` (DB file lives in `data/`). No PostgreSQL. The `pom.xml` uses `com.h2database:h2`.
+- **Tests use H2 in-memory** — `application-test.properties` uses `jdbc:h2:mem:testdb` with `ddl-auto=create-drop`. No Testcontainers.
+- **H2 console** — enabled at `/h2-console` (JDBC URL: `jdbc:h2:file:./data/animebacklog`, user `sa`, no password).
 - **`@GeneratedValue(strategy = GenerationType.IDENTITY)`** — use IDENTITY with H2, not SEQUENCE.
-- **`AnimeStatus` enum** (`ONGOING`, `COMPLETED`, `HIATUS`) is defined inside the `Anime` entity. It's mapped as `@Enumerated(EnumType.STRING)`.
-- **Constructor injection** preferred (already used in `AnimeService`, but will be refactored to use `@RequiredArgsConstructor` with Lombok).
-- **Lombok** is annotation-processor (`scope=provided`). IDEs need Lombok plugin. The `pom.xml` already has the correct `annotationProcessorPaths` config.
-- **`AnimeService.findAllAnimeById(Long id)` ignores the `id` param** — will be removed during refactor.
-- **No DTOs exist yet** — they will be created per the feature plans.
-- **Jikan API v4** base URL: `https://api.jikan.moe/v4`. Rate limit: 3 req/s. Use Spring Cache + Caffeine with TTL.
-- **Maven wrapper**: Unix = `mvnw`, Windows = `mvnw.cmd`.
+- **`AnimeStatus` enum** — `WATCHING`, `WATCHED`, `ON_HOLD`, `DROPPED`, `PLANNING_TO_WATCH`. Defined inside `Anime` entity, mapped as `@Enumerated(EnumType.STRING)`.
+- **Lombok** — scope `provided`, annotation processor path configured in `maven-compiler-plugin`. IDEs need Lombok plugin.
+- **`@RequiredArgsConstructor`** — preferred pattern; already used in `AnimeService`.
+- **Jikan API v4** — base URL: `https://api.jikan.moe/v4` (configurable via `jikan.api.base-url` in `application.properties`). Rate limit: 3 req/s. Cached with Caffeine (1h TTL, max 1000 entries).
+- **Spring `RestClient`** (not `RestTemplate`) — used in `JikanClient` with 10s connect/read timeouts.
+- **WireMock** (v3.12.1, test scope) — used in controller tests for stubbing Jikan HTTP responses.
+- **Maven wrapper** — Windows: `mvnw.cmd`.
+- **Images** — downloaded by `ImageService` to `data/images/anime_<malId>.<ext>`.
+- **`data/` directory** — contains H2 DB file and downloaded images. Not in `.gitignore` (runtime state).
+- **FXML files** live in `src/main/resources/fxml/`, CSS in `src/main/resources/css/`.
+- **`StarRating`** — custom JavaFX component in `dae.me.javafx.component` for 0–10 star rating UI.
