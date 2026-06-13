@@ -1,13 +1,16 @@
 package dae.me.repository;
 
+import dae.me.entity.Anime;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import dae.me.entity.Anime;
-
 @Repository
-public interface AnimeRepository extends JpaRepository<Anime, Long> {
-	Optional<Anime> findAnimeByName(String name); 
-	Optional<Anime> findAnimeByNameContaining(String keyword);
+public interface AnimeRepository extends JpaRepository<Anime, Long>, JpaSpecificationExecutor<Anime> {
+
+    Optional<Anime> findByAnimeName(String animeName);
+
+    Optional<Anime> findByAnimeNameContainingIgnoreCase(String keyword);
 }
