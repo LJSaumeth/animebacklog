@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dae.me.javafx.controller.CategoryManagerController">
+
+    <top>
+        <VBox spacing="8">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+            <Label text="Categorias"
+                   style="-fx-font-size: 22px; -fx-text-fill: #FAEB92; -fx-font-weight: bold;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="categoryTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colName" text="Nombre" prefWidth="250"/>
+                <TableColumn fx:id="colColor" text="Color" prefWidth="200"/>
+            </columns>
+            <placeholder>
+                <Label text="No hay categorias"/>
+            </placeholder>
+        </TableView>
+    </center>
+
+    <bottom>
+        <GridPane hgap="12" vgap="8">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+
+            <Label text="Nombre *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="nameField" promptText="Nombre de la categoria"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="250"/>
+            <Label fx:id="nameError" styleClass="error"
+                   GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+            <Label text="Color" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ColorPicker fx:id="colorPicker"
+                         GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <HBox spacing="8" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                <Button text="Agregar" styleClass="primary" onAction="#onAdd"/>
+                <Button text="Actualizar" onAction="#onUpdate"/>
+                <Button text="Eliminar" styleClass="danger" onAction="#onDelete"/>
+                <Button text="Limpiar" onAction="#onClear"/>
+            </HBox>
+        </GridPane>
+    </bottom>
+
+</BorderPane>

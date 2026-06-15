@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Separator?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dae.me.javafx.controller.AnimeFormController">
+
+    <top>
+        <VBox spacing="8">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+            <Label fx:id="titleLabel" text="Nuevo Anime"
+                   style="-fx-font-size: 22px; -fx-text-fill: #FAEB92; -fx-font-weight: bold;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <GridPane hgap="12" vgap="12" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="10" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Nombre *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="nameField" promptText="Nombre del anime"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="350"/>
+            <Label fx:id="nameError" styleClass="error"
+                   GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+            <Label text="Episodios *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="episodesField" promptText="Cantidad de episodios"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="150"/>
+            <Label fx:id="episodesError" styleClass="error"
+                   GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+            <Label text="Temporadas" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="seasonsField" promptText="Ej: 2"
+                       GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="150"/>
+
+            <Label text="Estado *" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="statusCombo" promptText="Seleccionar estado"
+                      GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="200"/>
+
+            <Label text="Rating" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <HBox fx:id="ratingContainer" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+            <Label text="URL Imagen" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <TextField fx:id="imageUrlField" promptText="https://..."
+                       GridPane.rowIndex="5" GridPane.columnIndex="1" prefWidth="400"/>
+
+            <Separator GridPane.rowIndex="6" GridPane.columnSpan="3"/>
+
+            <Label text="Categorias" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+            <ListView fx:id="categoryList" prefHeight="120" prefWidth="300"
+                      GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+        </GridPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets topRightBottomLeft="20"/>
+            </padding>
+            <Button text="Buscar en Jikan" onAction="#onJikanSearch"/>
+            <Button text="Cancelar" styleClass="danger" onAction="#onCancel"/>
+            <Button text="Guardar" styleClass="primary" onAction="#onSave"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
